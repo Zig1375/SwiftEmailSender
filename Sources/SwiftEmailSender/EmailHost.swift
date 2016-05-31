@@ -63,14 +63,14 @@ class EmailHost {
                 }
             }
 
-            curlHelperSetOptString(handle, CURLOPT_URL, stringToChars("smtp://\( self.host ):\( self.port )"));
-            curlHelperSetOptUseSSL(handle);
-            curlHelperSetOptInt(handle, CURLOPT_SSL_VERIFYPEER, 0);
-            curlHelperSetOptInt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+            emailHelperSetOptString(handle, CURLOPT_URL, stringToChars("smtp://\( self.host ):\( self.port )"));
+            emailHelperSetOptUseSSL(handle);
+            emailHelperSetOptInt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+            emailHelperSetOptInt(handle, CURLOPT_SSL_VERIFYHOST, 0);
 
-            curlHelperSetOptString(handle, CURLOPT_USERNAME, stringToChars(self.username));
-            curlHelperSetOptString(handle, CURLOPT_PASSWORD, stringToChars(self.password));
-            curlHelperSetOptString(handle, CURLOPT_MAIL_FROM, stringToChars("<\(self.from)>"));
+            emailHelperSetOptString(handle, CURLOPT_USERNAME, stringToChars(self.username));
+            emailHelperSetOptString(handle, CURLOPT_PASSWORD, stringToChars(self.password));
+            emailHelperSetOptString(handle, CURLOPT_MAIL_FROM, stringToChars("<\(self.from)>"));
 
             recipients = curl_slist_append(recipients, stringToChars("<\(email.to)>"));
 
@@ -78,9 +78,9 @@ class EmailHost {
                 recipients = curl_slist_append(recipients, stringToChars("<\(email.cc!)>"));
             }
 
-            curlHelperSetOptHeaders(handle, CURLOPT_MAIL_RCPT, recipients);
+            emailHelperSetOptHeaders(handle, CURLOPT_MAIL_RCPT, recipients);
 
-            curlHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>!, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>!) -> Int in
+            emailHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>!, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>!) -> Int in
                 if (size * nMemb == 0) {
                     return 0;
                 }
@@ -144,8 +144,8 @@ class EmailHost {
             var vemail = email;
             withUnsafeMutablePointer(&vemail) {
                 ptr in
-                curlHelperSetOptReadData(handle, ptr);
-                curlHelperSetOptInt(handle, CURLOPT_UPLOAD, 1);
+                emailHelperSetOptReadData(handle, ptr);
+                emailHelperSetOptInt(handle, CURLOPT_UPLOAD, 1);
                 curl_easy_perform(handle);
             }
         }
