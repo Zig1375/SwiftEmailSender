@@ -5,6 +5,10 @@ public class EmailQueue {
 
     private var hosts = SyncronizedDictionary<String, EmailHost>();
 
+    public init() {
+
+    }
+
     public func addHost(alias : String, host : String, port : UInt32, username : String, password : String, from : String, headers : [String]? = nil, interval : UInt32 = 60) {
         let eHost = EmailHost(host : host, port : port, username: username, password: password, from: from, headers : headers, interval : interval);
         self.hosts[alias] = eHost;

@@ -39,13 +39,6 @@ This is a Swift module for send email.
 ## Here is an example on how to use it:
 
 ```swift
-import Foundation
-#if os(Linux)
-import Glibc
-#else
-import Darwin
-#endif
-
 let queue = EmailQueue();
 queue.addHost(
     alias : "test",  
