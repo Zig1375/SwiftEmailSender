@@ -3,7 +3,7 @@ import Dispatch
 
 struct SyncronizedArray<Value> {
     private var array : [Value] = [Value]();
-    private let accessQueue = dispatch_queue_create("SynchronizedArrayAccess", DISPATCH_QUEUE_SERIAL);
+    private let accessQueue = dispatch_queue_create("SynchronizedArrayAccess", DISPATCH_QUEUE_SERIAL)!;
 
     subscript(index : Int) -> Value? {
         get {

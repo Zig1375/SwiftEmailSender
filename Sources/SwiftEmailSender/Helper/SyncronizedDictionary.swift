@@ -3,7 +3,7 @@ import Dispatch
 
 struct SyncronizedDictionary<Key : Hashable, Value> {
     private var array : [Key : Value] = [Key : Value]();
-    private let accessQueue = dispatch_queue_create("SynchronizedDictionaryAccess", DISPATCH_QUEUE_SERIAL);
+    private let accessQueue = dispatch_queue_create("SynchronizedDictionaryAccess", DISPATCH_QUEUE_SERIAL)!;
 
     subscript(index : Key) -> Value? {
         set {

@@ -81,7 +81,7 @@ class EmailHost {
 
             emailHelperSetOptHeaders(handle, CURLOPT_MAIL_RCPT, recipients);
 
-            emailHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>!, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>!) -> Int in
+            emailHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>?, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>?) -> Int in
                 if (size * nMemb == 0) {
                     return 0;
                 }
@@ -130,7 +130,7 @@ class EmailHost {
 
                     pemail.sendStatus = pemail.sendStatus!.next();
                     if (resData != nil) {
-                        return EmailHost.fillBuffer(data : resData!, buffer : UnsafeMutablePointer<UInt8>(buf), length: size * nMemb);
+                        return EmailHost.fillBuffer(data : resData!, buffer : UnsafeMutablePointer<UInt8>(buf!), length: size * nMemb);
                     } else {
                         return 0;
                     }
