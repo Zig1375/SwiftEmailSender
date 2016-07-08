@@ -27,9 +27,11 @@ class EmailHost {
         self.interval = max(interval, 60);
 
         let _ = Thread() {
-            sleep(self.interval);
-            self.sentCounter = 0;
-            self.send();
+            while(true) {
+                sleep(self.interval);
+                self.sentCounter = 0;
+                self.send();
+            }
         };
     }
 
@@ -73,7 +75,10 @@ class EmailHost {
             emailHelperSetOptString(handle, CURLOPT_PASSWORD, stringToChars(self.password));
             emailHelperSetOptString(handle, CURLOPT_MAIL_FROM, stringToChars("<\(self.from)>"));
 
-            recipients = curl_slist_append(recipients, stringToChars("<\(email.to)>"));
+            let recip = email.to.split(separator : ",");
+            for v in recip {
+                recipients = curl_slist_append(recipients, stringToChars(EmailHost.addBrackets(v.trim())));
+            }
 
             if ( email.cc != nil ) {
                 recipients = curl_slist_append(recipients, stringToChars("<\(email.cc!)>"));
@@ -100,11 +105,17 @@ class EmailHost {
                             formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss ZZZ";
                             formatter.locale = NSLocale(localeIdentifier : "en_US");
 
+                            let recip = pemail.to.split(separator : ",");
+                            var emailTo = [String]();
+                            for v in recip {
+                                emailTo.append(EmailHost.addBrackets(v.trim()));
+                            }
+
                             var strs : [String] = [
-                                "User-Agent: swift-email-sender v\(EmailQueue.VERSION)",
-                                "Date: \(formatter.string(from: NSDate()))",
-                                "From: <\(pemail.host!.from)>",
-                                "To: <\(pemail.to)>"
+                                    "User-Agent: swift-email-sender v\(EmailQueue.VERSION)",
+                                    "Date: \(formatter.string(from: NSDate()))",
+                                    "From: <\(pemail.host!.from)>",
+                                    "To: \(emailTo.joined(separator : ", "))"
                             ];
 
                             if (pemail.cc != nil) {
@@ -150,6 +161,14 @@ class EmailHost {
                 curl_easy_perform(handle);
             }
         }
+    }
+
+    private static func addBrackets(_ s : String) -> String {
+        if (s.preg_test(pattern : "[<>]+")) {
+            return s;
+        }
+
+        return "<\(s)>";
     }
 
     static func fillBuffer(data : NSData, buffer: UnsafeMutablePointer<UInt8>, length: Int) -> Int {

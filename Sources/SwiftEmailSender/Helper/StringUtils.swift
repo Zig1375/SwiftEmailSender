@@ -89,3 +89,21 @@ public extension NSString {
 }
 
 #endif
+
+extension String {
+    func preg_test(pattern: String) -> Bool {
+        if ( self.range(of: pattern, options: .regularExpressionSearch) != nil ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    func trim() -> String {
+        return self.trimmingCharacters(in: NSCharacterSet.whitespaces());
+    }
+
+    func split(separator: String) -> Array<String> {
+        return self.components(separatedBy: separator);
+    }
+}
