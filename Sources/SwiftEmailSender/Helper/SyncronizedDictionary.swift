@@ -1,22 +1,21 @@
 import Foundation
-import Dispatch
 
 struct SyncronizedDictionary<Key : Hashable, Value> {
     private var array : [Key : Value] = [Key : Value]();
-    private let accessQueue = dispatch_queue_create("SynchronizedDictionaryAccess", DISPATCH_QUEUE_SERIAL);
+    private let _lock = NSLock();
 
     subscript(index : Key) -> Value? {
         set {
-            dispatch_sync(self.accessQueue) {
-                self.array[index] = newValue
-            }
+            _lock.lock();
+            self.array[index] = newValue
+            _lock.unlock();
         }
         get {
             var element : Value?;
 
-            dispatch_sync(self.accessQueue) {
-                element = self.array[index];
-            }
+            _lock.lock();
+            element = self.array[index];
+            _lock.unlock();
 
             return element;
         }
@@ -24,43 +23,50 @@ struct SyncronizedDictionary<Key : Hashable, Value> {
 
     var count : Int {
         var element : Int = 0;
-        dispatch_sync(self.accessQueue) {
-            element = self.array.count;
-        }
+        _lock.lock();
+        element = self.array.count;
+        _lock.unlock();
         return element;
     }
 
     var values : LazyMapCollection<Dictionary<Key, Value>, Value> {
         var v : LazyMapCollection<Dictionary<Key, Value>, Value>?;
-        dispatch_sync(self.accessQueue) {
-            v = self.array.values;
-        }
+
+        _lock.lock();
+        v = self.array.values;
+        _lock.unlock();
 
         return v!;
     }
 
     var keys : LazyMapCollection<Dictionary<Key, Value>, Key> {
         var k : LazyMapCollection<Dictionary<Key, Value>, Key>?;
-        dispatch_sync(self.accessQueue) {
-            k = self.array.keys;
-        }
+
+        _lock.lock();
+        k = self.array.keys;
+        _lock.unlock();
 
         return k!;
     }
 
     mutating func remove(key : Key) {
-        dispatch_sync(self.accessQueue) {
-            self.array.removeValue(forKey : key);
-        }
+        _lock.lock();
+        self.array.removeValue(forKey : key);
+        _lock.unlock();
     }
 
     mutating func removeAll() {
-        dispatch_sync(self.accessQueue) {
-            self.array.removeAll();
-        }
+        _lock.lock();
+        self.array.removeAll();
+        _lock.unlock();
     }
 
     func get<T>(key : Key) -> T? {
-        return array[key] as? T;
+        var res : T?;
+        _lock.lock();
+        res = array[key] as? T;
+        _lock.unlock();
+
+        return res;
     }
 }

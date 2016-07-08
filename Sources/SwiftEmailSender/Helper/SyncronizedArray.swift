@@ -1,46 +1,50 @@
 import Foundation
-import Dispatch
 
 struct SyncronizedArray<Value> {
     private var array : [Value] = [Value]();
-    private let accessQueue = dispatch_queue_create("SynchronizedArrayAccess", DISPATCH_QUEUE_SERIAL);
+    private let _lock = NSLock();
 
     subscript(index : Int) -> Value? {
         get {
             var element : Value?;
 
-            dispatch_sync(self.accessQueue) {
-                if (self.array.count > index) {
-                    element = self.array[index];
-                }
+            _lock.lock();
+
+            if (self.array.count > index) {
+                element = self.array[index];
             }
+
+            _lock.unlock();
 
             return element;
         }
     }
 
     var count : Int {
-        var element : Int = 0;
-        dispatch_sync(self.accessQueue) {
-            element = self.array.count;
+        defer {
+            _lock.unlock();
         }
-        return element;
+
+        _lock.lock();
+        return self.array.count;
     }
 
     mutating func append(_ value : Value) {
-        dispatch_sync(self.accessQueue) {
-            self.array.append(value);
-        }
+        _lock.lock();
+        self.array.append(value);
+        _lock.unlock();
     }
 
     mutating func remove(_ index : Int) -> Value? {
         var element : Value?;
 
-        dispatch_sync(self.accessQueue) {
-            if (self.array.count > index) {
-                element = self.array.remove(at : index);
-            }
+        _lock.lock();
+
+        if (self.array.count > index) {
+            element = self.array.remove(at : index);
         }
+
+        _lock.unlock();
 
         return element;
     }

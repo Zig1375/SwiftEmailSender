@@ -1,6 +1,6 @@
 ## Install
 
-Supported only Swift 3.0 (snapshot from May 03, 2016) `swift-DEVELOPMENT-SNAPSHOT-2016-05-03-a`
+Supported only Swift 3.0 (snapshot from June 06, 2016) `swift-DEVELOPMENT-SNAPSHOT-2016-06-06-a`
 
 In `Package.swift`:
 ```swift
