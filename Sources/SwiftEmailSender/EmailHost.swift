@@ -1,9 +1,7 @@
 import Foundation
 import EmailCurl
-import Dispatch
 
 class EmailHost {
-    private let accessQueue = dispatch_queue_create("SynchronizedDictionaryAccess", DISPATCH_QUEUE_SERIAL)!;
     private var sentCounter : UInt32 = 0;
 
     let host : String;
