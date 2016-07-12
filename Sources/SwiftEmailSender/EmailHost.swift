@@ -3,6 +3,7 @@ import EmailCurl
 
 class EmailHost {
     private var sentCounter : UInt32 = 0;
+    private let _lock = NSLock();
 
     let host : String;
     let port : UInt32;
@@ -27,7 +28,11 @@ class EmailHost {
         let _ = Thread() {
             while(true) {
                 sleep(self.interval);
+
+                self._lock.lock();
                 self.sentCounter = 0;
+                self._lock.unlock();
+
                 self.send();
             }
         };
@@ -35,19 +40,29 @@ class EmailHost {
 
     func add(email : Email) {
         email.host = self;
+
+        self._lock.lock();
         self.queue.append(email);
+        self._lock.unlock();
+
+        self.send();
     }
 
     func send() {
+        self._lock.lock();
+
         if ((self.sentCounter >= self.maxSentInInterval) || (self.queue.count == 0)) {
+            self._lock.unlock();
             return;
         }
 
         if let email = self.queue.remove(0) {
+            self.sentCounter += 1;
+            self._lock.unlock();
+
             sendEmail(email: email);
         }
 
-        self.sentCounter += 1;
         self.send();
     }
 
