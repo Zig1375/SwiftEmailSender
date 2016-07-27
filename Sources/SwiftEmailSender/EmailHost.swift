@@ -86,7 +86,7 @@ class EmailHost {
 
             emailHelperSetOptString(handle, CURLOPT_USERNAME, stringToChars(self.username));
             emailHelperSetOptString(handle, CURLOPT_PASSWORD, stringToChars(self.password));
-            emailHelperSetOptString(handle, CURLOPT_MAIL_FROM, stringToChars("<\(self.from)>"));
+            emailHelperSetOptString(handle, CURLOPT_MAIL_FROM, stringToChars(EmailHost.addBrackets(self.from)));
 
             let recip = email.to.split(separator : ",");
             for v in recip {
@@ -94,7 +94,7 @@ class EmailHost {
             }
 
             if ( email.cc != nil ) {
-                recipients = curl_slist_append(recipients, stringToChars("<\(email.cc!)>"));
+                recipients = curl_slist_append(recipients, stringToChars(EmailHost.addBrackets(email.cc!)));
             }
 
             emailHelperSetOptHeaders(handle, CURLOPT_MAIL_RCPT, recipients);
@@ -127,7 +127,7 @@ class EmailHost {
                             var strs : [String] = [
                                     "User-Agent: swift-email-sender v\(EmailQueue.VERSION)",
                                     "Date: \(formatter.string(from: NSDate()))",
-                                    "From: <\(pemail.host!.from)>",
+                                    "From: \(EmailHost.addBrackets(pemail.host!.from))",
                                     "To: \(emailTo.joined(separator : ", "))"
                             ];
 
