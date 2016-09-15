@@ -25,7 +25,7 @@ class EmailHost {
         self.headers = headers;
         self.interval = max(interval, 60);
 
-        let _ = Thread() {
+        zThread(block: {
             while(true) {
                 sleep(self.interval);
 
@@ -35,7 +35,7 @@ class EmailHost {
 
                 self.send();
             }
-        };
+        }).start();
     }
 
     func add(email : Email) {
@@ -99,24 +99,24 @@ class EmailHost {
 
             emailHelperSetOptHeaders(handle, CURLOPT_MAIL_RCPT, recipients);
 
-            emailHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>?, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>?) -> Int in
+            emailHelperSetOptReadFunc(handle) { (buf: UnsafeMutablePointer<Int8>?, size: Int, nMemb: Int, privateData: UnsafeMutableRawPointer?) -> Int in
                 if (size * nMemb == 0) {
                     return 0;
                 }
 
-                let p = UnsafePointer<Email>(privateData);
-                if let pemail = p?.pointee {
+                let p = privateData?.assumingMemoryBound(to: Email.self).pointee;
+                if let pemail = p {
 
                     if (pemail.sendStatus == nil) {
                         return 0;
                     }
 
-                    var resData : NSData?;
+                    var resData : Data?;
                     switch (pemail.sendStatus!) {
                         case .MAILPART_HEADER :
-                            let formatter = NSDateFormatter();
+                            let formatter = DateFormatter();
                             formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss ZZZ";
-                            formatter.locale = NSLocale(localeIdentifier : "en_US");
+                            formatter.locale = Locale(identifier : "en_US");
 
                             let recip = pemail.to.split(separator : ",");
                             var emailTo = [String]();
@@ -126,7 +126,7 @@ class EmailHost {
 
                             var strs : [String] = [
                                     "User-Agent: swift-email-sender v\(EmailQueue.VERSION)",
-                                    "Date: \(formatter.string(from: NSDate()))",
+                                    "Date: \(formatter.string(from: Date()))",
                                     "From: \(EmailHost.addBrackets(pemail.host!.from))",
                                     "To: \(emailTo.joined(separator : ", "))"
                             ];
@@ -154,7 +154,7 @@ class EmailHost {
 
                     pemail.sendStatus = pemail.sendStatus!.next();
                     if (resData != nil) {
-                        return EmailHost.fillBuffer(data : resData!, buffer : UnsafeMutablePointer<UInt8>(buf)!, length: size * nMemb);
+                        return EmailHost.fillBuffer(data : resData!, buffer : UnsafeRawPointer(buf!).assumingMemoryBound(to: UInt8.self), length: size * nMemb);
                     } else {
                         return 0;
                     }
@@ -167,7 +167,7 @@ class EmailHost {
             }
 
             var vemail = email;
-            withUnsafeMutablePointer(&vemail) {
+            withUnsafeMutablePointer(to: &vemail) {
                 ptr in
                 emailHelperSetOptReadData(handle, ptr);
                 emailHelperSetOptInt(handle, CURLOPT_UPLOAD, 1);
@@ -184,17 +184,26 @@ class EmailHost {
         return "<\(s)>";
     }
 
-    static func fillBuffer(data : NSData, buffer: UnsafeMutablePointer<UInt8>, length: Int) -> Int {
-        let result = min(length, data.length) - 1;
-        memcpy(buffer, data.bytes + 0, Int(result));
+    static func fillBuffer(data : Data, buffer: UnsafePointer<UInt8>, length: Int) -> Int {
+        let localData = NSMutableData(capacity: 4096) ?? NSMutableData();
+        localData.append(data);
+
+        let result = min(length, localData.length);
+        let bytes = localData.bytes.assumingMemoryBound(to: UInt8.self) + 0;
+        UnsafeMutableRawPointer(mutating: buffer).copyBytes(from: bytes, count: result);
+
         return result;
     }
 
     private func stringToChars(_ st : String) -> UnsafeMutablePointer<Int8> {
         if let temp = StringUtils.toNullTerminatedUtf8String(st) {
-            return UnsafeMutablePointer<Int8>(temp.bytes);
+            let bytes = temp.withUnsafeBytes { (pointer: UnsafePointer<UInt8>) -> UnsafeMutablePointer<Int8> in
+                return UnsafeMutablePointer<Int8>(OpaquePointer(pointer));
+            }
+
+            return bytes;
         } else {
-            return UnsafeMutablePointer<Int8>([Int8]());
+            return UnsafeMutablePointer<Int8>(mutating: [Int8]());
         }
     }
 }

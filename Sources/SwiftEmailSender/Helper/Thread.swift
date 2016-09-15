@@ -1,35 +1,30 @@
 import Foundation
 
 #if os(Linux)
-class Thread
+typealias zThread = Thread;
+#elseif os(OSX)
+class zThread: NSObject
 {
-    init(_ callback : () -> Void) {
-        let thread = NSThread(){
-            callback();
-        };
-        thread.start();
+    private var thread: Thread?
+    private var callback: (() -> Void)?;
+
+    init(block : @escaping(() -> Void)) {
+        super.init()
+        self.callback = block;
+
+        self.thread = Thread(target: self, selector: #selector(zThread.invoke), object: nil);
+    }
+
+    func start() {
+        self.thread?.start();
+    }
+
+    func invoke() {
+        self.callback?()
+
+        // Discard callback and timer.
+        self.callback = nil
+        self.thread = nil
     }
 }
-#elseif os(OSX)
-    class Thread: NSObject
-    {
-        private var thread: NSThread?
-        private var callback: (() -> Void)?
-
-        init(_ callback : () -> Void) {
-            super.init()
-            self.callback = callback
-
-            self.thread = NSThread(target: self, selector: #selector(Thread.invoke), object: nil);
-            thread?.start();
-        }
-
-        func invoke() {
-            self.callback?()
-
-            // Discard callback and timer.
-            self.callback = nil
-            self.thread = nil
-        }
-    }
 #endif

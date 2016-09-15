@@ -23,76 +23,50 @@ import Glibc
 import Foundation
 
 // MARK: StringUtils
-
 public class StringUtils {
 
     ///
-    /// Converts a Swift string to a UTF encoded NSData
+    /// Converts a Swift string to a UTF encoded Data
     ///
     /// - Parameter str: String
     ///
-    /// - Returns: NSData?
+    /// - Returns: Data?
     ///
-    public static func toUtf8String(_ str: String) -> NSData? {
-        let nsstr:NSString = str.bridge()
-        return nsstr.data(using: NSUTF8StringEncoding)
+    public static func toUtf8String(_ str: String) -> Data? {
+        return str.data(using: String.Encoding.utf8)
     }
 
 
     ///
-    /// Converts a Swift string to a UTF encoded null terminated NSData
+    /// Converts a Swift string to a UTF encoded null terminated Data
     ///
     /// - Parameter str: String
     ///
-    /// - Returns: NSData?
+    /// - Returns: Data?
     ///
-    public static func toNullTerminatedUtf8String(_ str: String) -> NSData? {
-        let nsstr:NSString = str.bridge()
-        let cString = nsstr.cString(using: NSUTF8StringEncoding)
-        return NSData(bytes: cString, length: Int(strlen(cString!))+1)
+    public static func toNullTerminatedUtf8String(_ str: String) -> Data? {
+        let cString = str.cString(using: String.Encoding.utf8)
+        return cString?.withUnsafeBufferPointer() { buffer -> Data? in
+            return buffer.baseAddress != nil ? Data(bytes: buffer.baseAddress!, count: buffer.count) : nil
+        }
     }
 
 
     ///
     /// Converts a UTF 8 encoded string to a Swift String
     ///
-    /// - Parameter str: String
+    /// - Parameter data: The UTF-8 encoded string to convert
     ///
     /// - Returns: String?
     ///
-    public static func fromUtf8String(_ data: NSData) -> String? {
-        let str = NSString(data: data, encoding: NSUTF8StringEncoding)
-        return str!.bridge()
+    public static func fromUtf8String(_ data: Data) -> String? {
+        return String(data: data, encoding: String.Encoding.utf8)
     }
 }
-
-
-// MARK: String extensions
-//
-// Because that auto bridged Strings to NSStrings do not exist yet for Linux, a bridge method
-// must be called on the String. This bridge method does not exist on Mac OS X. Therefore, these
-// extensions are added to the String structure so that bridge can be called regardless of 
-// operating systems.
-//
-#if os(OSX) || os(iOS)
-
-public extension String {
-    func bridge() -> NSString {
-        return self as NSString
-    }
-}
-
-public extension NSString {
-    func bridge() -> String {
-        return self as String
-    }
-}
-
-#endif
 
 extension String {
     func preg_test(pattern: String) -> Bool {
-        if ( self.range(of: pattern, options: .regularExpressionSearch) != nil ) {
+        if ( self.range(of: pattern, options: .regularExpression) != nil ) {
             return true;
         }
 
@@ -100,7 +74,7 @@ extension String {
     }
 
     func trim() -> String {
-        return self.trimmingCharacters(in: NSCharacterSet.whitespaces());
+        return self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines);
     }
 
     func split(separator: String) -> Array<String> {
