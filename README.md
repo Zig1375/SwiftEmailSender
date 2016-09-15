@@ -6,7 +6,7 @@ In `Package.swift`:
 ```swift
 dependencies: [
     // Other your packages
-    .Package(url: "https://github.com/Zig1375/SwiftEmailSender.git", majorVersion: 0, minor: 0)
+    .Package(url: "https://github.com/Zig1375/SwiftEmailSender.git", majorVersion: 3, minor: 0)
 ]
 ```
 
