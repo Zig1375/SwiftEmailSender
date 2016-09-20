@@ -14,7 +14,7 @@ public class Email {
     public var text : String?;
 
     internal var host : EmailHost?;
-    internal let boundary_body = "=BODY=SEPARATOR=_\(arc4random())_\(arc4random())_\(arc4random())_\(arc4random())_=";
+    internal let boundary_body = "=BODY=SEPARATOR=_\(NSUUID().uuidString)_=";
 
     /// Текущее состоянии отправки
     var sendStatus : EmailSendStatus? = EmailSendStatus.MAILPART_HEADER;
